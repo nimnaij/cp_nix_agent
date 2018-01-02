@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import subprocess, random, importlib.util, os, json, time
+import subprocess, random, importlib.util, os, json, time, sys, threading
 
 MODULES_DIR = "modules"
 MODULES_NAMESPACE = "cp_mod_{0}"
@@ -9,6 +9,8 @@ def load_module(path,name):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
   except:
+    print("Unexpected error: ")
+    print( sys.exc_info()[0])
     return False
   return module
 
@@ -46,6 +48,8 @@ Conduct an investigation to identify and fix security and policy violations.
         module_data[key] = data
         messages.append(data["script"])
       except:
+        print("Unexpected error: ")
+        print( sys.exc_info()[0])
         pass
     self.module_data = module_data
     return messages
@@ -108,15 +112,14 @@ class nix_agent:
     self.active = True
     while self.active == True:
       self.execute_checks()
-      self.active = False
-      break
+      self.save_state()
       time.sleep(self.check_interval)
   def execute_checks(self):
     outputs = []
     modules = load_modules()
     for key in modules.keys():
       module = modules[key]
-      cur_outputs = module.check(self.module_data)
+      cur_outputs = module.check(self.module_data[key]["initial_state"])
       for output in cur_outputs:
         output["id"] = key + str(output["id"])
       outputs += cur_outputs
@@ -125,9 +128,24 @@ class nix_agent:
         if self.cur_scores[line["id"]]["value"] != line["value"]:
           self.handle_new_score(self.cur_scores[line["id"]], line)
       self.cur_scores[line["id"]] = line
-      if line["value"] < 0:
-        print("vvvv=BAD=vvvvv")
+#      if line["value"] < 0:
+#        continue
       print(line)
+
+  def handle_checcks(self):
+    pass
+
+  def cleanup_game(self):
+    modules = load_modules()
+    for key in modules.keys():
+      module = modules[key]
+      try:
+        module.cleanup(self.module_data[key]["initial_state"])
+      except:
+        print("Unexpected error: ")
+        print( sys.exc_info()[0])
+        continue
+
   def handle_new_score(self,old,new):
     pass
   def render_script(self):
@@ -137,5 +155,22 @@ class nix_agent:
 
 if __name__ == "__main__":
   agent = nix_agent()
-  agent.start()
+  t = threading.Thread(target=agent.start)
+  t.start()
+  while True:
+    cmd = input("quit to quit; clean to cleanup;reset to cleanup and remove conf file;\n")
+    if "quit" in cmd:
+      agent.active = False
+      print("Waiting for watcher thread to finish...")
+      t.join()
+      break
+    elif "clean" in cmd:
+      agent.cleanup_game()
+    elif "reset" in cmd:
+      agent.active = False
+      agent.cleanup_game()
+      t.join()
+      os.remove(agent.init_file)
+      break
+      
   
