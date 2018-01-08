@@ -3,6 +3,9 @@ import subprocess, random, importlib.util, os, json, time, sys, threading
 
 MODULES_DIR = "modules"
 MODULES_NAMESPACE = "cp_mod_{0}"
+SCOREBOARD_DIR = "./"
+SCENARIO_FILENAME = "Scenario_README"
+SCENARIO_SCOREBOARD = "Scoreboard"
 def load_module(path,name):
   try:
     spec = importlib.util.spec_from_file_location(name, path)
@@ -79,6 +82,13 @@ Conduct an investigation to identify and fix security and policy violations.
     return self.final_script
 
 class nix_agent:
+  
+  def run_and_capture(self,l):
+    data = subprocess.run(l, stdout=subprocess.PIPE).stdout.decode('utf8')
+    if data[-1:] == "\n":
+      data = data[:-1]
+    return data
+
   init_file = ".init"
   check_interval = 30
   def load_state(self):
@@ -123,17 +133,29 @@ class nix_agent:
       for output in cur_outputs:
         output["id"] = key + str(output["id"])
       outputs += cur_outputs
-    for line in outputs:
+      self.handle_checks(outputs)
+
+  def handle_checks(self, checks):
+    list_item = "<li class='{0}'>{1} [{2} pts]</li>\n"
+    list_html = ""
+    max_points = 0
+    cur_points = 0
+    for line in checks:
       if line["id"] in self.cur_scores.keys():
         if self.cur_scores[line["id"]]["value"] != line["value"]:
           self.handle_new_score(self.cur_scores[line["id"]], line)
       self.cur_scores[line["id"]] = line
-#      if line["value"] < 0:
-#        continue
-      print(line)
+      max_points += line["max"]
+      cur_points += line["value"]
+      if "msg" in line.keys():
+        if line["val"] > 0:
+          line_type = "good"
+        else:
+          line_type = "bad"
+        list_html += list_item.format(line_type, line["msg"], line["value"])
 
-  def handle_checcks(self):
-    pass
+    scoreboard_html = "<html><body><ul>{0}</ul></body></html>".format(list_html)
+    self.write_to_file(SCOREBOARD_DIR + SCENARIO_SCOREBOARD, scoreobard_html)
 
   def cleanup_game(self):
     modules = load_modules()
@@ -147,9 +169,24 @@ class nix_agent:
         continue
 
   def handle_new_score(self,old,new):
-    pass
+    intro = "New Score:"
+    if old["value"] > new["value"]:
+      intro = "Points Lost:"
+    msg = "{0} {1} [{2} pts]".format(intro,old["msg"],new["value"])
+    self.run_and_capture(["notify-send", msg, "-t","5000"])
+
+  def write_to_file(self,fname,contents):
+    f = open(fname, "w")
+    f.write(contents)
+    f.close()
+
   def render_script(self):
+    script_html = """<html><head><title>Scenario</title></head><body><pre>{}</pre></body></html>""".format(self.script)
     print(self.script)
+    self.write_to_file(SCOREBOARD_DIR + SCENARIO_FILENAME, script_html)
+
+
+
   def start(self):
     self.begin_game()
 
@@ -157,7 +194,7 @@ if __name__ == "__main__":
   agent = nix_agent()
   t = threading.Thread(target=agent.start)
   t.start()
-  while True:
+  while False:
     cmd = input("quit to quit; clean to cleanup;reset to cleanup and remove conf file;\n")
     if "quit" in cmd:
       agent.active = False
