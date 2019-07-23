@@ -170,11 +170,14 @@ class nix_agent:
 
   def handle_new_score(self,old,new):
     intro = "New Score:"
+    audio = "smb_stage_clear.wav"
     if old["value"] > new["value"]:
       intro = "Points Lost:"
+      audio = "smb_mariodie.wav"
     msg = "{0} {1} [{2} pts]".format(intro,old["msg"],new["value"])
-    self.run_and_capture(["notify-send", msg, "-t","5000"])
-
+    self.run_and_capture(["kdialog", "--title", "CP Agent Notification!", "--passivepopup", msg, "7"])
+    self.run_and_capture(["aplay", audio])
+    
   def write_to_file(self,fname,contents):
     f = open(fname, "w")
     f.write(contents)
