@@ -159,7 +159,7 @@ def check(state):
   #check if ps is repaired
   original_ps = run_and_capture(["which", "ps"])
   original_ps_hash = hash_file(original_ps)
-  ps_check = { "max": 3, "id": 1, "value" : 0,, "msg" : ""}
+  ps_check = { "max": 3, "id": 1, "value" : 0, "msg" : ""}
   if original_ps_hash == state["original_ps_hash"]:
     ps_check["value"] = 3
     ps_check["msg"] = "The `ps` command has been repaired - flag: ps-has-been-repaired-dcad2a27f96f6a14e148e2d2cf760f75"
