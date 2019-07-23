@@ -153,7 +153,7 @@ def check(state):
   netstat_check = { "max": 3, "id": 0, "value" : 0}
   if original_netstat_hash == state["original_netstat_hash"]:
     netstat_check["value"] = 3
-    netstat_check[ "msg" ] = "The `netstat` command has been repaired"
+    netstat_check[ "msg" ] = "The `netstat` command has been repaired - flag: netstat-has-been-fixed-a8028b8181ae3061cc81b8e69662434e"
   results.append(netstat_check)
 
   #check if ps is repaired
@@ -162,7 +162,7 @@ def check(state):
   ps_check = { "max": 3, "id": 1, "value" : 0}
   if original_ps_hash == state["original_ps_hash"]:
     ps_check["value"] = 3
-    ps_check["msg"] = "The `ps` command has been repaired"
+    ps_check["msg"] = "The `ps` command has been repaired - flag: ps-has-been-repaired-dcad2a27f96f6a14e148e2d2cf760f75"
   results.append(ps_check)
 
   #check if rc.local is repaired
@@ -170,7 +170,7 @@ def check(state):
   text = get_file_contents(state["persistence_entry_file"])
   if state["persistence_string"] not in text:
     persistence_check["value"] = 1
-    persistence_check["msg"] = "Malware persistence in rc.local has been removed"
+    persistence_check["msg"] = "Malware persistence in rc.local has been removed. flag: rc.local-is-gone-93c1f4d4a9f8e471265078553835afae"
   results.append(persistence_check)
 
   #check if malware is in the process list
@@ -178,14 +178,14 @@ def check(state):
   badpids = get_pids_from_name(state["persistence_path"]) + get_pids_from_name(state["malicious_process"])
   if len(badpids) < 1:
     running_check["value"] = 2
-    running_check["msg"] = "Netcat backdoor no longer in process list"
+    running_check["msg"] = "Netcat backdoor no longer in process list. your flag is: netcat_is_gone-944d8e211a4c28acc0c31283dab31e5e"
   results.append(running_check)
 
   #check if associated malware files on disk have been removed
   files_check = { "max" : 1, "id" : 4, "value" : 0 } 
   if not os.path.isfile(state["persistence_path"]) and not os.path.isfile(state["malicious_process"]) and not os.path.isfile(state["new_netstat"]) and not os.path.isfile(state["new_ps"]):
     files_check["value"] = 1
-    files_check["msg"] = "All associated files with netcat backdoor have been removed"
+    files_check["msg"] = "All associated files with netcat backdoor have been removed. flag is: backdoor-removed-2aa4875ec9158d97a1ab64086279adc1"
 
   return results
 

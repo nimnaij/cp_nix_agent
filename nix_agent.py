@@ -5,9 +5,9 @@ import subprocess, random, importlib.util, os, json, time, sys, threading
 
 MODULES_DIR = "modules"
 MODULES_NAMESPACE = "cp_mod_{0}"
-SCOREBOARD_DIR = "./"
-SCENARIO_FILENAME = "Scenario_README"
-SCENARIO_SCOREBOARD = "Scoreboard"
+SCOREBOARD_DIR = "/home/owner/Desktop/"
+SCENARIO_FILENAME = "Agent_README.html"
+SCENARIO_SCOREBOARD = "Agent_Score_Report.html"
 def load_module(path,name):
   try:
     spec = importlib.util.spec_from_file_location(name, path)
@@ -95,7 +95,7 @@ class nix_agent:
     return data
 
   init_file = ".init"
-  check_interval = 30
+  check_interval = 15
   def load_state(self):
     f = open(self.init_file,"r")
     data = f.read()
@@ -159,7 +159,7 @@ class nix_agent:
           line_type = "bad"
         list_html += list_item.format(line_type, line["msg"], line["value"])
 
-    scoreboard_html = "<html><body><ul>{0}</ul></body></html>".format(list_html)
+    scoreboard_html = "<html><head><meta http-equiv=\"refresh\" content=\"15\"><title>Score Report</title></head><body><ul>{0}</ul></body></html>".format(list_html)
     self.write_to_file(SCOREBOARD_DIR + SCENARIO_SCOREBOARD, scoreboard_html)
 
   def cleanup_game(self):
@@ -180,7 +180,7 @@ class nix_agent:
       intro = "Points Lost:"
       audio = "smb_mariodie.wav"
     msg = "{0} {1} [{2} pts]".format(intro,new["msg"],new["value"])
-    self.run_no_capture(["kdialog", "--title", "CP Agent Notification!", "--passivepopup", msg, "7"])
+    self.run_no_capture(["sudo", "-u", "owner", "kdialog" , "--title" ,"CP Agent Notification!",  "--passivepopup", msg , "7"])
     self.run_no_capture(["aplay", audio])
     
   def write_to_file(self,fname,contents):
@@ -189,7 +189,7 @@ class nix_agent:
     f.close()
 
   def render_script(self):
-    script_html = """<html><head><title>Scenario</title></head><body><pre>{}</pre></body></html>""".format(self.script)
+    script_html = """<html><head> <title>Scenario</title></head><body><pre>{}</pre></body></html>""".format(self.script)
     print(self.script)
     self.write_to_file(SCOREBOARD_DIR + SCENARIO_FILENAME, script_html)
 
