@@ -159,14 +159,14 @@ def check(state):
   #check if ps is repaired
   original_ps = run_and_capture(["which", "ps"])
   original_ps_hash = hash_file(original_ps)
-  ps_check = { "max": 3, "id": 1, "value" : 0}
+  ps_check = { "max": 3, "id": 1, "value" : 0,, "msg" : ""}
   if original_ps_hash == state["original_ps_hash"]:
     ps_check["value"] = 3
     ps_check["msg"] = "The `ps` command has been repaired - flag: ps-has-been-repaired-dcad2a27f96f6a14e148e2d2cf760f75"
   results.append(ps_check)
 
   #check if rc.local is repaired
-  persistence_check = { "max" : 1, "id" : 2, "value" : 0 }
+  persistence_check = { "max" : 1, "id" : 2, "value" : 0 , "msg" : ""}
   text = get_file_contents(state["persistence_entry_file"])
   if state["persistence_string"] not in text:
     persistence_check["value"] = 1
@@ -174,7 +174,7 @@ def check(state):
   results.append(persistence_check)
 
   #check if malware is in the process list
-  running_check = { "max" : 2, "id" : 3, "value" : 0 }
+  running_check = { "max" : 2, "id" : 3, "value" : 0 , "msg" : ""}
   badpids = get_pids_from_name(state["persistence_path"]) + get_pids_from_name(state["malicious_process"])
   if len(badpids) < 1:
     running_check["value"] = 2
@@ -182,7 +182,7 @@ def check(state):
   results.append(running_check)
 
   #check if associated malware files on disk have been removed
-  files_check = { "max" : 1, "id" : 4, "value" : 0 } 
+  files_check = { "max" : 1, "id" : 4, "value" : 0 , "msg" : ""} 
   if not os.path.isfile(state["persistence_path"]) and not os.path.isfile(state["malicious_process"]) and not os.path.isfile(state["new_netstat"]) and not os.path.isfile(state["new_ps"]):
     files_check["value"] = 1
     files_check["msg"] = "All associated files with netcat backdoor have been removed. flag is: backdoor-removed-2aa4875ec9158d97a1ab64086279adc1"

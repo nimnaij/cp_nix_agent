@@ -73,8 +73,8 @@ def initialize():
 """ Conducts checks based on the initial state configuration. Returns the results of the checks via a list of message and point value dicts. A sample of the three types of results is provided."""
 def check(state):
   results = []
-  passwd_result = {"value" : 0, "max" : 2, "id" : 0}
-  shadow_result = {"value" : 0, "max" : 1, "id" : 1}
+  passwd_result = {"value" : 0, "max" : 2, "id" : 0, "msg" : ""}
+  shadow_result = {"value" : 0, "max" : 1, "id" : 1, "msg" : ""}
   if state["dirty_passwd_line"] not in get_file_contents(PASSWD):
     passwd_result["value"] = 2
     passwd_result["msg"] = "backdoor in nobody account removed from /etc/passwd; flag: nobody_backdoor_passwd_removed-ab0c472f50627dcca3403048e53ba8b5"
