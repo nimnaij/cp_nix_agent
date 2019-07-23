@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 import subprocess, random, importlib.util, os, json, time, sys, threading
 
+#This is designed to run on Kubuntu right now
+
 MODULES_DIR = "modules"
 MODULES_NAMESPACE = "cp_mod_{0}"
 SCOREBOARD_DIR = "./"
@@ -83,6 +85,9 @@ Conduct an investigation to identify and fix security and policy violations.
 
 class nix_agent:
   
+  def run_no_capture(self,l):
+    subprocess.Popen(l)
+
   def run_and_capture(self,l):
     data = subprocess.run(l, stdout=subprocess.PIPE).stdout.decode('utf8')
     if data[-1:] == "\n":
@@ -148,14 +153,14 @@ class nix_agent:
       max_points += line["max"]
       cur_points += line["value"]
       if "msg" in line.keys():
-        if line["val"] > 0:
+        if line["value"] > 0:
           line_type = "good"
         else:
           line_type = "bad"
         list_html += list_item.format(line_type, line["msg"], line["value"])
 
     scoreboard_html = "<html><body><ul>{0}</ul></body></html>".format(list_html)
-    self.write_to_file(SCOREBOARD_DIR + SCENARIO_SCOREBOARD, scoreobard_html)
+    self.write_to_file(SCOREBOARD_DIR + SCENARIO_SCOREBOARD, scoreboard_html)
 
   def cleanup_game(self):
     modules = load_modules()
@@ -174,9 +179,9 @@ class nix_agent:
     if old["value"] > new["value"]:
       intro = "Points Lost:"
       audio = "smb_mariodie.wav"
-    msg = "{0} {1} [{2} pts]".format(intro,old["msg"],new["value"])
-    self.run_and_capture(["kdialog", "--title", "CP Agent Notification!", "--passivepopup", msg, "7"])
-    self.run_and_capture(["aplay", audio])
+    msg = "{0} {1} [{2} pts]".format(intro,new["msg"],new["value"])
+    self.run_no_capture(["kdialog", "--title", "CP Agent Notification!", "--passivepopup", msg, "7"])
+    self.run_no_capture(["aplay", audio])
     
   def write_to_file(self,fname,contents):
     f = open(fname, "w")
@@ -197,7 +202,7 @@ if __name__ == "__main__":
   agent = nix_agent()
   t = threading.Thread(target=agent.start)
   t.start()
-  while False:
+  while True:
     cmd = input("quit to quit; clean to cleanup;reset to cleanup and remove conf file;\n")
     if "quit" in cmd:
       agent.active = False
