@@ -173,6 +173,14 @@ class nix_agent:
         print( sys.exc_info()[0])
         continue
 
+  def alert_message(self,msg):
+    cmd = ['/bin/bash', './scripts/notify-send-as-root.sh', msg]
+    print(self.run_and_capture(cmd))
+
+  def play_sound(self,sound_file):
+    cmd = ['aplay', sound_file]
+    print(self.run_and_capture(cmd))
+
   def handle_new_score(self,old,new):
     intro = "New Score:"
     audio = "smb_stage_clear.wav"
@@ -180,8 +188,8 @@ class nix_agent:
       intro = "Points Lost:"
       audio = "smb_mariodie.wav"
     msg = "{0} {1} [{2} pts]".format(intro,new["msg"],new["value"])
-    self.run_no_capture(["sudo", "-u", "owner", "kdialog" , "--title" ,"CP Agent Notification!",  "--passivepopup", msg , "7"])
-    self.run_no_capture(["aplay", audio])
+    self.alert_message(msg)
+    self.play_sound(audio)
     
   def write_to_file(self,fname,contents):
     f = open(fname, "w")
@@ -200,6 +208,7 @@ class nix_agent:
 
 if __name__ == "__main__":
   agent = nix_agent()
+  agent.alert_message("agent has started")
   t = threading.Thread(target=agent.start)
   t.start()
   while True:
